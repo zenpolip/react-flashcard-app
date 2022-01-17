@@ -1,56 +1,55 @@
-import { Component } from 'react';
 import Card from './components/card/card.component';
-import DrawButton from './components/draw-button/draw-button.component';
+import CustomButton from './components/custom-button/custom-button.component';
 import './App.scss';
 import cardsArray from './assets/cards.data';
+import { connect } from 'react-redux';
+import { setCards, setCurrentCard } from './redux/flashcard/flashcard.actions';
 
 
-class App extends Component {
-  constructor(props) {
-    super(props);
+const App = ({ cards, currentCard, setCards, setCurrentCard }) => {
 
-    this.updateCard = this.updateCard.bind(this);
-
-    this.state = {
-      cards: cardsArray,
-      currentCard: {}
-    }
+  const shuffleCards = () => {
+    const shuffledCards = cardsArray
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value)
+    setCards(shuffledCards)
+    setCurrentCard(shuffledCards[0])
+    console.log(cards.indexOf(currentCard))
   }
 
-  componentWillMount() {
-    const currentCards = this.state.cards;
 
-    this.setState({
-      cards: currentCards,
-      currentCard: this.getRandomCard(currentCards)
-    })
+  const drawCard = () => {
+    console.log(cards.indexOf(currentCard))
+    let i = cards.indexOf(currentCard)
+    setCurrentCard(cards[i + 1])
   }
 
-  getRandomCard(currentCards) {
-    var card = currentCards[Math.floor(Math.random() * currentCards.length)];
-    return card;
-  }
-
-  updateCard() {
-    const currentCards = this.state.cards;
-    this.setState({
-      currentCard: this.getRandomCard(currentCards)
-    })
-  }
-
-  render() {
-    return (
-      <div className="App">
-        <h1>Flashcard App</h1>
-        <Card question={this.state.currentCard.question}
-          answer={this.state.currentCard.answer}
-        />
-        <div>
-          <DrawButton drawCard={this.updateCard}></DrawButton>
+  return (
+    <div className="App">
+      <h1>Flashcard App</h1>
+      <CustomButton handleClick={shuffleCards}>{currentCard
+        ? "Shuffle Deck"
+        : "New Round"}
+      </CustomButton>
+      {currentCard
+        ? <div>
+          <Card currentCard={currentCard} />
+          <CustomButton handleClick={drawCard}>Next card</CustomButton>
         </div>
-      </div>
-    );
-  }
+        : ''}
+    </div>
+  );
 }
 
-export default App;
+const mapStateToProps = state => ({
+  cards: state.flashcard.cards,
+  currentCard: state.flashcard.currentCard
+})
+
+const mapDispatchToProps = dispatch => ({
+  setCards: cards => dispatch(setCards(cards)),
+  setCurrentCard: currentCard => dispatch(setCurrentCard(currentCard))
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
